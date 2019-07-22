@@ -19,6 +19,8 @@ export class InfluxQueryCtrl extends QueryCtrl {
   selectMenu: any;
   measurementSegment: any;
   removeTagFilterSegment: any;
+  timeShiftPolicies: any[];
+  timeShiftPolicy: any;
 
   /** @ngInject */
   constructor(
@@ -35,11 +37,15 @@ export class InfluxQueryCtrl extends QueryCtrl {
     this.groupBySegment = this.uiSegmentSrv.newPlusButton();
     this.resultFormats = [{ text: 'Time series', value: 'time_series' }, { text: 'Table', value: 'table' }];
     this.policySegment = uiSegmentSrv.newSegment(this.target.policy);
+    this.timeShiftPolicies = ['none', '-1h', '-1d', '-7d'];
 
     if (!this.target.measurement) {
       this.measurementSegment = uiSegmentSrv.newSelectMeasurement();
     } else {
       this.measurementSegment = uiSegmentSrv.newSegment(this.target.measurement);
+    }
+    if (!this.target.timeShiftPolicy) {
+      this.target.timeShiftPolicy = 'none';
     }
 
     this.tagSegments = [];

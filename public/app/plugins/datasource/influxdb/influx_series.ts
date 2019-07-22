@@ -6,11 +6,21 @@ export default class InfluxSeries {
   series: any;
   alias: any;
   annotation: any;
+  timeShift: any;
 
-  constructor(options: { series: any; alias?: any; annotation?: any }) {
+  constructor(options: { series: any; alias?: any; annotation?: any; timeShift?: any }) {
     this.series = options.series;
     this.alias = options.alias;
     this.annotation = options.annotation;
+    if (options.timeShift === '-1h') {
+      this.timeShift = 3600 * 1 * 1000;
+    } else if (options.timeShift === '-1d') {
+      this.timeShift = 3600 * 24 * 1000;
+    } else if (options.timeShift === '-7d') {
+      this.timeShift = 3600 * 24 * 7 * 1000;
+    } else {
+      this.timeShift = 0;
+    }
   }
 
   getTimeSeries() {
@@ -43,7 +53,8 @@ export default class InfluxSeries {
         const datapoints = [];
         if (series.values) {
           for (i = 0; i < series.values.length; i++) {
-            datapoints[i] = [series.values[i][j], series.values[i][0]];
+            //将查询偏移的时间差再加回来
+            datapoints[i] = [series.values[i][j], series.values[i][0] + this.timeShift];
           }
         }
 

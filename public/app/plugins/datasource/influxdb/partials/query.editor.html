@@ -13,6 +13,17 @@
     </div>
     <div class="gf-form-inline">
       <div class="gf-form">
+        <label class="gf-form-label query-keyword">TIME SHIFT</label>
+        <div class="gf-form-select-wrapper">
+          <select
+            class="gf-form-input gf-size-auto"
+            ng-model="ctrl.target.timeShiftPolicy"
+            ng-options="value for value in ctrl.timeShiftPolicies"
+            ng-change="ctrl.refresh()"
+          ></select>
+        </div>
+      </div>
+      <div class="gf-form">
         <label class="gf-form-label query-keyword">FORMAT AS</label>
         <div class="gf-form-select-wrapper">
           <select
@@ -188,6 +199,23 @@
           placeholder="No Timezone"
           ng-blur="ctrl.refresh()"
         />
+      </div>
+      <div class="gf-form gf-form--grow">
+        <div class="gf-form-label gf-form-label--grow"></div>
+      </div>
+    </div>
+
+    <div class="gf-form-inline">
+      <div class="gf-form">
+        <label class="gf-form-label query-keyword width-7">TIME SHIFT</label>
+        <div class="gf-form-select-wrapper">
+          <select
+            class="gf-form-input gf-size-auto"
+            ng-model="ctrl.target.timeShiftPolicy"
+            ng-options="value for value in ctrl.timeShiftPolicies"
+            ng-change="ctrl.refresh()"
+          ></select>
+        </div>
       </div>
       <div class="gf-form gf-form--grow">
         <div class="gf-form-label gf-form-label--grow"></div>
