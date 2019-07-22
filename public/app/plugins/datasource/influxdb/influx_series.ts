@@ -12,12 +12,17 @@ export default class InfluxSeries {
     this.series = options.series;
     this.alias = options.alias;
     this.annotation = options.annotation;
-    if (options.timeShift === '-1h') {
-      this.timeShift = 3600 * 1 * 1000;
-    } else if (options.timeShift === '-1d') {
+    if (options.timeShift === '-1d') {
       this.timeShift = 3600 * 24 * 1000;
     } else if (options.timeShift === '-7d') {
       this.timeShift = 3600 * 24 * 7 * 1000;
+    } else if (
+      options.timeShift &&
+      options.timeShift[0] === '-' &&
+      options.timeShift[options.timeShift.length - 1] === 'h'
+    ) {
+      //所有匹配-xh的都当作小时来处理，因为解析出来是负数，所以前面再加个-  负负得正
+      this.timeShift = -3600 * parseInt(options.timeShift, 10) * 1000;
     } else {
       this.timeShift = 0;
     }

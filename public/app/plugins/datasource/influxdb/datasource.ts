@@ -82,7 +82,7 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
     // add global adhoc filters to timeFilter
     const adhocFilters = this.templateSrv.getAdhocFilters(this.name);
     for (let i = 0; i < options.targets.length; i++) {
-      options.timeShift = options.targets[i].timeShiftPolicy;
+      options.timeShift = options.targets[i].timeShift;
       let timeFilter = this.getTimeFilter(options);
       if (adhocFilters.length > 0) {
         timeFilter += ' AND ' + queryModel.renderAdhocFilters(adhocFilters);
@@ -115,11 +115,11 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
           if (alias) {
             alias = this.templateSrv.replace(target.alias, options.scopedVars);
           }
-          const timeShift = target.timeShiftPolicy;
+
           const influxSeries = new InfluxSeries({
             series: data.results[i].series,
             alias: alias,
-            timeShift: timeShift,
+            timeShift: target.timeShift,
           });
 
           switch (target.resultFormat) {
@@ -206,7 +206,7 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
 
     if (options && options.range) {
       for (let i = 0; i < options.targets.length; i++) {
-        const timeShift = options.targets[i].timeShiftPolicy;
+        const timeShift = options.targets[i].timeShift;
         const timeFilter = this.getTimeFilter({
           rangeRaw: options.range,
           timezone: options.timezone,
@@ -332,7 +332,7 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
     const until = this.getInfluxTime(options.rangeRaw.to, true, options.timezone);
     const fromIsAbsolute = from[from.length - 1] === 'ms';
     let offsetTime = '';
-    if (options.timeShift && options.timeShift !== 'none') {
+    if (options.timeShift) {
       offsetTime = options.timeShift;
     }
 
