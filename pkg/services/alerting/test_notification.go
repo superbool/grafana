@@ -2,6 +2,7 @@ package alerting
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/grafana/grafana/pkg/bus"
@@ -54,7 +55,10 @@ func createTestEvalContext(cmd *NotificationTestCommand) *EvalContext {
 		Name:        "Test notification",
 		Message:     "Someone is testing the alert notification within grafana.",
 		State:       models.AlertStateAlerting,
+		Callback:    "http://localhost:8080",
 	}
+
+	_ = json.Unmarshal([]byte(`[{"email":false,"phone":false,"sms":false,"user":"xxx"}]`), &testRule.Receivers)
 
 	ctx := NewEvalContext(context.Background(), testRule)
 	if cmd.Settings.Get("uploadImage").MustBool(true) {

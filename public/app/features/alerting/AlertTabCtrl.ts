@@ -29,6 +29,7 @@ export class AlertTabCtrl {
   appSubUrl: string;
   alertHistory: any;
   newAlertRuleTag: any;
+  newReceiver: any;
 
   /** @ngInject */
   constructor(
@@ -189,6 +190,8 @@ export class AlertTabCtrl {
     alert.notifications = alert.notifications || [];
     alert.for = alert.for || '0m';
     alert.alertRuleTags = alert.alertRuleTags || {};
+    alert.receivers = alert.receivers || [];
+    this.newReceiver = { user: '', email: true, sms: true, phone: true };
 
     const defaultName = this.panel.title + ' alert';
     alert.name = alert.name || defaultName;
@@ -428,6 +431,49 @@ export class AlertTabCtrl {
           });
       },
     });
+  }
+
+  addReceiver() {
+    if (!this.newReceiver.email) {
+      this.newReceiver.email = false;
+    }
+    if (!this.newReceiver.sms) {
+      this.newReceiver.sms = false;
+    }
+    if (!this.newReceiver.phone) {
+      this.newReceiver.phone = false;
+    }
+    const error = this.validateReceiver();
+
+    if (!error) {
+      const newReceiver = {
+        user: this.newReceiver.user.trim(),
+        email: this.newReceiver.email,
+        sms: this.newReceiver.sms,
+        phone: this.newReceiver.phone,
+      };
+      this.alert.receivers.push(newReceiver);
+      this.newReceiver.user = '';
+      this.newReceiver.email = true;
+      this.newReceiver.sms = true;
+      this.newReceiver.phone = true;
+      this.panelCtrl.refresh();
+    }
+  }
+
+  removeReceiver(index) {
+    this.alert.receivers.splice(index, 1);
+    this.panelCtrl.refresh();
+  }
+
+  validateReceiver() {
+    if (!this.newReceiver.user) {
+      return "email address can't be empty";
+    }
+    if (this.newReceiver.email === false && this.newReceiver.sms === false && this.newReceiver.phone === false) {
+      return 'must choose one alert type';
+    }
+    return '';
   }
 }
 

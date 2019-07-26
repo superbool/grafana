@@ -36,6 +36,8 @@ type Rule struct {
 	Conditions          []Condition
 	Notifications       []string
 	AlertRuleTags       []*models.Tag
+	Callback            string
+	Receivers           *simplejson.Json
 
 	StateChanges int64
 }
@@ -126,6 +128,8 @@ func NewRuleFromDBAlert(ruleDef *models.Alert) (*Rule, error) {
 	model.NoDataState = models.NoDataOption(ruleDef.Settings.Get("noDataState").MustString("no_data"))
 	model.ExecutionErrorState = models.ExecutionErrorOption(ruleDef.Settings.Get("executionErrorState").MustString("alerting"))
 	model.StateChanges = ruleDef.StateChanges
+	model.Receivers = ruleDef.Settings.Get("receivers")
+	model.Callback = ruleDef.Settings.Get("callback").MustString("")
 
 	model.Frequency = ruleDef.Frequency
 	// frequency cannot be zero since that would not execute the alert rule.
