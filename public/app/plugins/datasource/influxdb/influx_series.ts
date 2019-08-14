@@ -6,11 +6,26 @@ export default class InfluxSeries {
   series: any;
   alias: any;
   annotation: any;
+  timeShift: any;
 
-  constructor(options: { series: any; alias?: any; annotation?: any }) {
+  constructor(options: { series: any; alias?: any; annotation?: any; timeShift?: any }) {
     this.series = options.series;
     this.alias = options.alias;
     this.annotation = options.annotation;
+    if (options.timeShift === '-1d') {
+      this.timeShift = 3600 * 24 * 1000;
+    } else if (options.timeShift === '-7d') {
+      this.timeShift = 3600 * 24 * 7 * 1000;
+    } else if (
+      options.timeShift &&
+      options.timeShift[0] === '-' &&
+      options.timeShift[options.timeShift.length - 1] === 'h'
+    ) {
+      //所有匹配-xh的都当作小时来处理，因为解析出来是负数，所以前面再加个-  负负得正
+      this.timeShift = -3600 * parseInt(options.timeShift, 10) * 1000;
+    } else {
+      this.timeShift = 0;
+    }
   }
 
   getTimeSeries() {
@@ -43,7 +58,8 @@ export default class InfluxSeries {
         const datapoints = [];
         if (series.values) {
           for (i = 0; i < series.values.length; i++) {
-            datapoints[i] = [series.values[i][j], series.values[i][0]];
+            //将查询偏移的时间差再加回来
+            datapoints[i] = [series.values[i][j], series.values[i][0] + this.timeShift];
           }
         }
 

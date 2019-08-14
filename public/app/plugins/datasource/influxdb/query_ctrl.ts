@@ -19,6 +19,7 @@ export class InfluxQueryCtrl extends QueryCtrl {
   selectMenu: any;
   measurementSegment: any;
   removeTagFilterSegment: any;
+  timeShift: any;
 
   /** @ngInject */
   constructor(

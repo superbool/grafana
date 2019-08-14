@@ -50,7 +50,6 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
   }
 
   query(options: any) {
-    let timeFilter = this.getTimeFilter(options);
     const scopedVars = options.scopedVars;
     const targets = _.cloneDeep(options.targets);
     const queryTargets: any[] = [];
@@ -82,12 +81,18 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
 
     // add global adhoc filters to timeFilter
     const adhocFilters = this.templateSrv.getAdhocFilters(this.name);
-    if (adhocFilters.length > 0) {
-      timeFilter += ' AND ' + queryModel.renderAdhocFilters(adhocFilters);
+    for (let i = 0; i < options.targets.length; i++) {
+      options.timeShift = options.targets[i].timeShift;
+      let timeFilter = this.getTimeFilter(options);
+      if (adhocFilters.length > 0) {
+        timeFilter += ' AND ' + queryModel.renderAdhocFilters(adhocFilters);
+      }
+      //默认只替换第一个匹配的
+      allQueries = allQueries.replace('$timeFilter', timeFilter);
     }
-
     // replace grafana variables
-    scopedVars.timeFilter = { value: timeFilter };
+    // 前面已经替换了就不需要再替换了
+    //scopedVars.timeFilter = { value: timeFilter };
 
     // replace templated variables
     allQueries = this.templateSrv.replace(allQueries, scopedVars);
@@ -114,6 +119,7 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
           const influxSeries = new InfluxSeries({
             series: data.results[i].series,
             alias: alias,
+            timeShift: target.timeShift,
           });
 
           switch (target.resultFormat) {
@@ -142,8 +148,7 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
         message: 'Query missing in annotation definition',
       });
     }
-
-    const timeFilter = this.getTimeFilter({ rangeRaw: options.rangeRaw, timezone: options.timezone });
+    const timeFilter = this.getTimeFilter({ rangeRaw: options.rangeRaw, timezone: options.timezone, timeShift: '' });
     let query = options.annotation.query.replace('$timeFilter', timeFilter);
     query = this.templateSrv.replace(query, null, 'regex');
 
@@ -200,8 +205,15 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
     }
 
     if (options && options.range) {
-      const timeFilter = this.getTimeFilter({ rangeRaw: options.range, timezone: options.timezone });
-      query = query.replace('$timeFilter', timeFilter);
+      for (let i = 0; i < options.targets.length; i++) {
+        const timeShift = options.targets[i].timeShift;
+        const timeFilter = this.getTimeFilter({
+          rangeRaw: options.range,
+          timezone: options.timezone,
+          timeShift: timeShift,
+        });
+        query = query.replace('$timeFilter', timeFilter);
+      }
     }
 
     return this._influxRequest(this.httpMode, '/query', { q: query, epoch: 'ms' }, options);
@@ -319,12 +331,20 @@ export default class InfluxDatasource extends DataSourceApi<InfluxQuery, InfluxO
     const from = this.getInfluxTime(options.rangeRaw.from, false, options.timezone);
     const until = this.getInfluxTime(options.rangeRaw.to, true, options.timezone);
     const fromIsAbsolute = from[from.length - 1] === 'ms';
-
-    if (until === 'now()' && !fromIsAbsolute) {
-      return 'time >= ' + from;
+    let offsetTime = '';
+    if (options.timeShift) {
+      offsetTime = options.timeShift;
     }
 
-    return 'time >= ' + from + ' and time <= ' + until;
+    if (until === 'now()' && !fromIsAbsolute) {
+      if (offsetTime === '') {
+        return 'time >= ' + from;
+      } else {
+        return 'time >= ' + from + offsetTime + ' and time <= now()' + offsetTime;
+      }
+    }
+
+    return 'time >= ' + from + offsetTime + ' and time <= ' + until + offsetTime;
   }
 
   getInfluxTime(date: any, roundUp: any, timezone: any) {
